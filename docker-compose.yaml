@@ -1,36 +1,47 @@
 version: '3'
 
 services:
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: nginx
+    ports:
+      - '8080:80'
+    depends_on:
+      - app
+      - db
+    networks:
+      - docker_tier2_app-network
+
   app:
     build:
       context: ./node
       dockerfile: Dockerfile
-    restart: always
+    container_name: app
     volumes:
       - ./node:/usr/src/app
-      - /usr/src/app/node_modules
+    entrypoint: dockerize -wait tcp://db:3306 -timeout 20s sh -c "npm install && npm run"
     tty: true
-    depends_on: 
-      - db    
+    depends_on:
+      - db
+    networks:
+      - docker_tier2_app-network
 
   db:
-    image: mysql:5.7               
-    command: --innodb-use-native-aio=0    
+    image: mysql:5.7
+    command: --innodb-use-native-aio=0
+    container_name: db
     restart: always
     tty: true
     volumes:
-      - ./mysql:/var/lib/mysql
       - ./node/.docker/mysql:/docker-entrypoint-initdb.d
-    environment: 
-      - MYSQL_DATABASE=nodedb
-      - MYSQL_ROOT_PASSWORD=password      
+    environment:
+      - MYSQL_DATABASE=appdb
+      - MYSQL_ROOT_PASSWORD=password
+    networks:
+      - docker_tier2_app-network
 
-  nginx:
-    build: 
-      context: ./nginx
-      dockerfile: Dockerfile
-    ports:
-      - "8080:80"
-    depends_on: 
-      - db
-      - app
+networks:
+   docker_tier2_app-network:
+    driver: bridge
