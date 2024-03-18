@@ -1,6 +1,4 @@
-
 const express = require('express');
-const axios = require('axios').default;
 const mysql = require('mysql');
 
 const app = express();
@@ -14,21 +12,20 @@ const dbConfig = {
 };
 
 app.get('/', (_req, res) => {
-  InsertName(res);
+  InsertName(res, "Jackson");
+  InsertName(res, "Vanessa");
+  InsertName(res, "Stephanie");
+  InsertName(res, "Mellanie");
+  InsertName(res, "Castiel");
 });
 
 app.listen(PORT, () => {
   console.log(`Application running on Port...: ${PORT} 🚀`);
 });
 
-async function getName() {
-  const RANDOM = Math.floor(Math.random() * 10);
-  const response = await axios.get('http://localhodocst:8080/api/people');
-  return response.data.results[RANDOM].name;
-}
 
-async function InsertName(res) {
-  const name = await getName();
+async function InsertName(res, name) {
+
   const connection = mysql.createConnection(dbConfig);
   const INSERT_QUERY = `INSERT INTO people(name) values('${name}')`;
 
